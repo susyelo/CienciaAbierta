@@ -1,0 +1,62 @@
+---
+title: ""
+author: Ciencia Abierta (fuente: )
+output: 
+  flexdashboard::flex_dashboard:
+    theme: journal
+    social: menu
+    source_code: embed
+---
+
+```{r setup, include = FALSE}
+library(flexdashboard)
+library(shiny)
+library(jsonlite)
+library(maptools)
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(purrr)
+library(leaflet)
+library(plotly)
+
+sites <- read.csv("data/nCoV2019_2020_line_list_open_outside.csv")
+
+sites$country2 <- ifelse(sites$country == "China", "orange","green")
+
+
+## cases per city 
+
+cases_per_city <- 
+  sites %>% 
+  group_by(city, country, latitude, longitude, country2) %>% 
+  tally()
+
+
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### All sites and their current status
+
+```{r}
+leaflet() %>% 
+  addTiles() %>% 
+  #fitBounds(-127.44,24.05,-65.30,50.35) %>% 
+  addCircleMarkers(cases_per_city$longitude, 
+                   cases_per_city$latitude, 
+                   color = cases_per_city$country2, 
+                   radius = cases_per_city$n/2, 
+                   fill = T,
+                   fillOpacity = 0.2,
+                   opacity = 0.6,
+                   popup = paste(cases_per_city$country,
+                                 cases_per_city$city, 
+                                 sep = ", ")) %>%
+  addLegend("bottomleft", 
+            colors = c("orange","green"),
+            labels = c("China",
+                       "other"), 
+            opacity = 0.8)
+```
