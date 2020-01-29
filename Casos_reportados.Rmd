@@ -20,14 +20,23 @@ library(purrr)
 library(leaflet)
 library(plotly)
 library(raster)
+library(stringr)
 
-sites <- read.csv("data/nCoV2019_2020_line_list_open - outside_Hubei.csv")
+sites_out_hubei <- read.csv("https://raw.githubusercontent.com/beoutbreakprepared/nCoV2019/master/dataset_archive/ncov_outside_hubei_20200128%200000.csv")
+
+sites_hubei <- read.csv("https://raw.githubusercontent.com/beoutbreakprepared/nCoV2019/master/dataset_archive/ncov_hubei_20200128%200000.csv")
+
+sites <- rbind(sites_out_hubei, sites_hubei)
+
+
+## Delete any space at the start or end
+sites$province <- str_trim(sites$province)
+sites$country <- str_trim(sites$country)
 
 sites$country2 <- ifelse(sites$country == "China", "orange","green")
 
 
 ## cases per city 
-
 cases_per_city <- 
   sites %>% 
   group_by(city, country, latitude, longitude, country2) %>% 
@@ -60,14 +69,13 @@ leaflet() %>%
   addLegend("bottomleft", 
             colors = c("orange","green"),
             labels = c("China",
-                       "other"), 
+                       "Otros"), 
             opacity = 0.8)
 ```
 
 ### Casos en China
 
 ```{r}
-#create a pop up (onClick)
 chinaMap<-getData('GADM',country="CHN",level=1, path = "data/")
 
 china_sr <- 
@@ -78,12 +86,19 @@ china_sr_n <-
   china_sr %>% 
   count(province)
 
+## Correct spelling
+chinaMap$NAME_1[grep("Mo", chinaMap$NAME_1)] <- "Inner Mongolia"
+chinaMap$NAME_1[grep("Nin", chinaMap$NAME_1)] <- "Ningxia"
+chinaMap$NAME_1[grep("Xinjiang", chinaMap$NAME_1)] <- "Xinjiang"
 
 chinaMap$n <- china_sr_n$n[match(chinaMap$NAME_1, china_sr_n$province)]
+
+#create a pop up (onClick)
 polygon_popup <- paste0("<strong>Provincia: </strong>", chinaMap$NAME_1, "<br>",
                         "<strong>N: </strong>", round(chinaMap$n,2))
+
 #create a color palette to fill the polygons
-pal <- colorQuantile("Blues", NULL, n = 5)
+pal <- colorQuantile("Blues", NULL, n = 10)
 
 map = leaflet() %>% 
   addProviderTiles("CartoDB.Positron") %>% 
