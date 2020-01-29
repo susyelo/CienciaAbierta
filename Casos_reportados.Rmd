@@ -42,6 +42,8 @@ cases_per_city <-
   group_by(city, country, latitude, longitude, country2) %>% 
   tally()
 
+cases_per_city$n2 <- ifelse(cases_per_city$n >= 20, "red","green")
+
 
 ```
 
@@ -57,8 +59,9 @@ leaflet() %>%
   #fitBounds(-127.44,24.05,-65.30,50.35) %>% 
   addCircleMarkers(cases_per_city$longitude, 
                    cases_per_city$latitude, 
-                   color = cases_per_city$country2, 
-                   radius = cases_per_city$n/5, 
+                   color = cases_per_city$n2, 
+                   #radius = cases_per_city$n/5, 
+                   radius = 0.3,
                    fill = T,
                    fillOpacity = 0.2,
                    opacity = 0.6,
@@ -67,9 +70,9 @@ leaflet() %>%
                                  cases_per_city$n,
                                  sep = ", ")) %>%
   addLegend("bottomleft", 
-            colors = c("orange","green"),
-            labels = c("China",
-                       "Otros"), 
+            colors = c("red","green"),
+            labels = c("N >= 20",
+                       "N < 20"), 
             opacity = 0.8)
 ```
 
