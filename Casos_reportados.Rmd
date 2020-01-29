@@ -1,11 +1,12 @@
 ---
-title: "Casos reportados de nCoV2019"
-author: "Ciencia Abierta, Fuente: nCoV2019_2020_line_list_open"
+title: "Casos reportados de 2019-nCoV"
+author: "Ciencia Abierta, Fuente: https://github.com/beoutbreakprepared/nCoV2019"
 output: 
   flexdashboard::flex_dashboard:
-    orientation: rows
+    orientation: columns
     social: menu
-    source_code: embed
+    theme: cerulean
+    #source_code: embed
 ---
 
 ```{r setup, include = FALSE}
@@ -42,16 +43,16 @@ cases_per_city <-
   group_by(city, country, latitude, longitude, country2) %>% 
   tally()
 
-cases_per_city$n2 <- ifelse(cases_per_city$n >= 20, "red","green")
-
+cases_per_city$n2 <- ifelse(cases_per_city$n >= 10, "red","green")
+cases_per_city$size <- ifelse(cases_per_city$country == "China", 0.05, 1)
 
 ```
+
 
 Column {data-width=650}
 -----------------------------------------------------------------------
 
-### Casos mundiales
-
+### Casos mundiales confirmados de 2019-nCoV 
 ```{r}
 leaflet() %>% 
   addTiles() %>% 
@@ -61,22 +62,23 @@ leaflet() %>%
                    cases_per_city$latitude, 
                    color = cases_per_city$n2, 
                    #radius = cases_per_city$n/5, 
-                   radius = 0.3,
+                   radius = cases_per_city$size,
                    fill = T,
                    fillOpacity = 0.2,
-                   opacity = 0.6,
+                   opacity = 0.5,
                    popup = paste(cases_per_city$country,
                                  cases_per_city$city, 
                                  cases_per_city$n,
-                                 sep = ", ")) %>%
+                                 sep = ", ")) %>% 
   addLegend("bottomleft", 
             colors = c("red","green"),
-            labels = c("N >= 20",
-                       "N < 20"), 
+            labels = c("N >= 10",
+                       "N < 10"), 
             opacity = 0.8)
 ```
 
-### Casos en China
+
+### Casos confirmados de 2019-nCoV en China 
 
 ```{r}
 chinaMap<-getData('GADM',country="CHN",level=1, path = "data/")
@@ -101,15 +103,15 @@ polygon_popup <- paste0("<strong>Provincia: </strong>", chinaMap$NAME_1, "<br>",
                         "<strong>N: </strong>", round(chinaMap$n,2))
 
 #create a color palette to fill the polygons
-pal <- colorQuantile("Blues", NULL, n = 10)
+pal <- colorQuantile("Reds", NULL, n = 10)
 
 map = leaflet() %>% 
   addProviderTiles("CartoDB.Positron") %>% 
   addPolygons(data = chinaMap, 
               fillColor= ~pal(n),
-              fillOpacity = 0.4, 
-              weight = 2, 
-              color = "white",
+              fillOpacity = 2, 
+              weight = 1, 
+              color = "grey",
               popup = polygon_popup)
 
 
