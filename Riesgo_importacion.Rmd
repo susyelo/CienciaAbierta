@@ -1,5 +1,5 @@
 ---
-title: "Riesgo de importación de casos con nCoV2019"
+title: "Riesgo de importación de casos de nCoV2019 desde Wuhan"
 author: "Ciencia Abierta, Fuente: EpiRisk.net"
 output: 
   flexdashboard::flex_dashboard:
@@ -28,29 +28,7 @@ countries <- read.csv("data/epirisk_countries.csv")
 
 Column {data-width=650}
 -----------------------------------------------------------------------
-
-### Probabilidad de riesgo por ciudad
-
-```{r}
-cities$risk <- cities$risk*100
-
-polygon_popup1 <- paste0("<strong>Ciudad: </strong>", cities$label, "<br>",
-                        "<strong>Riesgo relativo: </strong>", round(cities$risk,4), "%")
-
-leaflet() %>% 
-  addTiles(options = leafletOptions(minZoom = 2 )) %>% 
-  addProviderTiles("CartoDB.Positron") %>%
-  #fitBounds(-127.44,24.05,-65.30,50.35) %>% 
-  addCircleMarkers(cities$lng, 
-                   cities$lat, 
-                   radius = cities$risk, 
-                   fill = T,
-                   fillOpacity = 0.2,
-                   opacity = 0.6,
-                   popup = polygon_popup1)
-```
-
-### Probabilidad de riesgo por país
+### Riesgo relativo de casos de importación por país
 
 ```{r}
 data(wrld_simpl)
@@ -98,4 +76,27 @@ leaflet(options = leafletOptions(minZoom = 2 )) %>%
 
 
 ```
+
+### Riesgo relativo de casos de importación por ciudad
+
+```{r}
+cities$risk <- cities$risk*100
+
+polygon_popup1 <- paste0("<strong>Ciudad: </strong>", cities$label, "<br>",
+                        "<strong>Riesgo relativo: </strong>", round(cities$risk,4), "%")
+
+leaflet() %>% 
+  addTiles(options = leafletOptions(minZoom = 2 )) %>% 
+  addProviderTiles("CartoDB.Positron") %>%
+  #fitBounds(-127.44,24.05,-65.30,50.35) %>% 
+  addCircleMarkers(cities$lng, 
+                   cities$lat, 
+                   radius = cities$risk, 
+                   fill = T,
+                   fillOpacity = 0.2,
+                   opacity = 0.6,
+                   popup = polygon_popup1)
+```
+
+
 
