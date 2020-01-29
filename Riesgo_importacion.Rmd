@@ -1,0 +1,101 @@
+---
+title: "Riesgo de importación de casos con nCoV2019"
+author: "Ciencia Abierta, Fuente: EpiRisk.net"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    social: menu
+    source_code: embed
+---
+
+```{r setup, include = FALSE}
+library(flexdashboard)
+library(shiny)
+library(jsonlite)
+library(maptools)
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(purrr)
+library(leaflet)
+library(plotly)
+library(raster)
+
+cities <- read.csv("data/epirisk_cities.csv")
+countries <- read.csv("data/epirisk_countries.csv")
+
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Probabilidad de riesgo por ciudad
+
+```{r}
+cities$risk <- cities$risk*100
+
+polygon_popup1 <- paste0("<strong>Ciudad: </strong>", cities$label, "<br>",
+                        "<strong>Riesgo relativo: </strong>", round(cities$risk,4), "%")
+
+leaflet() %>% 
+  addTiles() %>% 
+  addProviderTiles("CartoDB.Positron") %>%
+  #fitBounds(-127.44,24.05,-65.30,50.35) %>% 
+  addCircleMarkers(cities$lng, 
+                   cities$lat, 
+                   radius = cities$risk, 
+                   fill = T,
+                   fillOpacity = 0.2,
+                   opacity = 0.6,
+                   popup = polygon_popup1)
+```
+
+### Probabilidad de riesgo por país
+
+```{r}
+data(wrld_simpl)
+
+##Correcting labels
+wrld_simpl$NAME <- as.character(wrld_simpl$NAME)
+wrld_simpl$NAME[grepl("unei", wrld_simpl$NAME)] <- "Brunei"
+wrld_simpl$NAME[grepl("Cote", wrld_simpl$NAME)] <- "Côte d'Ivoire"
+wrld_simpl$NAME[grepl("Democratic Republic of the Congo", wrld_simpl$NAME)] <- "Congo, Dem. Rep."
+wrld_simpl$NAME[grepl("Egypt", wrld_simpl$NAME)] <- "Egypt, Arab Rep."
+wrld_simpl$NAME[grepl("Iran", wrld_simpl$NAME)] <- "Iran"
+wrld_simpl$NAME[grepl("Korea, Republic of", wrld_simpl$NAME)] <- "Korea, Rep."
+wrld_simpl$NAME[grepl("Korea, Democratic People's Republic of", wrld_simpl$NAME)] <- "Korea, Dem. Rep."
+wrld_simpl$NAME[grepl("Korea, Democratic People's Republic of", wrld_simpl$NAME)] <- "Korea, Dem. Rep."
+wrld_simpl$NAME[grepl("Lao", wrld_simpl$NAME)] <- "Lao PDR"
+wrld_simpl$NAME[grepl("Russia", wrld_simpl$NAME)] <- "Russian Federation"
+wrld_simpl$NAME[grepl("Tanzania", wrld_simpl$NAME)] <- "Tanzania"
+wrld_simpl$NAME[wrld_simpl$NAME == "United States"] <- "United States of America"
+wrld_simpl$NAME[grepl("Viet", wrld_simpl$NAME)] <- "Vietnam"
+
+wrld_simpl$Riesgo <- countries$risk[match(wrld_simpl$NAME, countries$label)]
+wrld_simpl$Poblacion <- countries$population[match(wrld_simpl$NAME, countries$label)]
+wrld_simpl$Riesgo <- wrld_simpl$Riesgo*100
+
+
+wrld_simpl$Poblacion[grepl("China", wrld_simpl$NAME)] <- 1381110000
+
+
+# provide a custom tooltip to plotly with the county name and actual rate
+polygon_popup2 <- paste0("<strong>País: </strong>", wrld_simpl$NAME, "<br>",
+                         "<strong>Población: </strong>", wrld_simpl$Poblacion, "<br>",
+                          "<strong>Riesgo: </strong>", round(wrld_simpl$Riesgo,4), "%")
+#create a color palette to fill the polygons
+pal <- colorQuantile("Greens", domain = NULL, n = 10, na.color = "white")
+
+leaflet(options = leafletOptions(minZoom = 1 )) %>% 
+  addTiles() %>% 
+  addProviderTiles("CartoDB.Positron") %>% 
+  addPolygons(data = wrld_simpl, 
+              fillColor= ~pal(Riesgo),
+              #fillOpacity = 0.5, 
+              weight = 2, 
+              color = "lightgrey",
+              popup = polygon_popup2)
+
+
+```
+
