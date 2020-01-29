@@ -38,7 +38,7 @@ polygon_popup1 <- paste0("<strong>Ciudad: </strong>", cities$label, "<br>",
                         "<strong>Riesgo relativo: </strong>", round(cities$risk,4), "%")
 
 leaflet() %>% 
-  addTiles() %>% 
+  addTiles(options = leafletOptions(minZoom = 2 )) %>% 
   addProviderTiles("CartoDB.Positron") %>%
   #fitBounds(-127.44,24.05,-65.30,50.35) %>% 
   addCircleMarkers(cities$lng, 
@@ -86,7 +86,7 @@ polygon_popup2 <- paste0("<strong>País: </strong>", wrld_simpl$NAME, "<br>",
 #create a color palette to fill the polygons
 pal <- colorQuantile("Greens", domain = NULL, n = 10, na.color = "white")
 
-leaflet(options = leafletOptions(minZoom = 1 )) %>% 
+leaflet(options = leafletOptions(minZoom = 2 )) %>% 
   addTiles() %>% 
   addProviderTiles("CartoDB.Positron") %>% 
   addPolygons(data = wrld_simpl, 
